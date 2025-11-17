@@ -30,7 +30,7 @@ def visualize_results(
     pareto_weights_X: np.ndarray, 
     tickers: List[str]
 ):
-    print("Memulai visualisasi dan analisis (BAB 3.5)...")
+    print("Memulai visualisasi dan analisis...")
         
     # Quick validation
     if len(tickers) != pareto_weights_X.shape[1]:

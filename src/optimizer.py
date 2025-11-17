@@ -24,13 +24,14 @@ class PortfolioOptimizationProblem(Problem):
         
         self.mu_vector = mu_vector
         self.R_matrix = R_matrix
+        self.w_max = w_max
         
         super().__init__(
             n_var=n_stocks,
             n_obj=2,       
-            n_constr=1,
+            n_constr=2,
             xl=0.0,        
-            xu=w_max
+            xu=1.0
         )
 
     def _evaluate(self, X: np.ndarray, out: dict, *args, **kwargs) -> None:
@@ -54,7 +55,9 @@ class PortfolioOptimizationProblem(Problem):
         # ----- Calculate Constraints ----- #
         # g(x) <= 0
         g1 = np.abs(weights.sum(axis=1) - 1.0)
-        out["G"] = np.column_stack([g1])
+        g2 = (weights - self.w_max).max(axis=1)
+
+        out["G"] = np.column_stack([g1, g2])
 
 def run_optimization(r_matrix: pd.DataFrame, mu_vector: pd.DataFrame, n_population: int, n_generations: int, n_stocks: int, w_max: int) -> Optional[tuple[np.ndarray, np.ndarray]]:
     print('----- Optimisasi dengan NSGA II -----')
@@ -85,7 +88,7 @@ def run_optimization(r_matrix: pd.DataFrame, mu_vector: pd.DataFrame, n_populati
         print(f"\nBerhasil menemukan {len(res.F)} solusi non-dominan (Pareto Front).")
         
         pareto_front_F = res.F
-        pareto_weights_X = res.X
+        pareto_weights_X = res.X / res.X.sum(axis=1)[:, None]
         
         # Convert back F1 mean to positive
         pareto_front_F[:, 0] = -pareto_front_F[:, 0]
